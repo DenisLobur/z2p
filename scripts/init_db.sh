@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -x
-set -eo pipefail
+#set -eo pipefail
 
 if ! [ -x "$(command -v psql)" ]; then
   echo >&2 "Error: psql is not installed."
-  exit 1
+  #exit 1
 fi
 
 if ! [ -x "$(command -v sqlx)" ]; then
@@ -13,7 +13,7 @@ if ! [ -x "$(command -v sqlx)" ]; then
   echo >&2 " cargo install --version='~0.7' sqlx-cli \
 --no-default-features --features rustls,postgres"
   echo >&2 "to install it."
-  exit 1
+  #exit 1
 fi
 
 # Check if a custom user has been set, otherwise default to 'postgres'
@@ -48,10 +48,16 @@ until psql -h "${DB_HOST}" -U "${DB_USER}" -p "${DB_PORT}" -d "postgres" -c '\q'
 done
 
 >&2 echo "Postgres is up and running on port ${DB_PORT} - running migrations now!"
+sleep 1
 
 DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
 export DATABASE_URL
+sleep 1
+>&2 echo "Creating db"
 sqlx database create
+sleep 1
+>&2 echo "Running migrations"
 sqlx migrate run
 
 >&2 echo "Postgres has been migrated, ready to go!"
+read varname
