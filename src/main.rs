@@ -5,6 +5,7 @@ use zero2prod::configuration::get_configuration;
 use tracing_bunyan_formatter::BunyanFormattingLayer;
 use tracing_subscriber::EnvFilter;
 use zero2prod::telemetry::{get_subscriber, init_subscriber};
+use secrecy::ExposeSecret;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
@@ -25,14 +26,14 @@ async fn main() -> Result<(), std::io::Error> {
 
     // The `with` method is provided by `SubscriberExt`, an extension
     // trait for `Subscriber` exposed by `tracing_subscriber`
-    let subscriber = get_subscriber("zero2prod".into(), "info".into());
+    let subscriber = get_subscriber("zero2prod".into(), "info".into(), std::io::stdout);
     init_subscriber(subscriber);
 
     // Panic if we can't read the configuration
     let configuration = get_configuration().expect("Failed to read configuration.");
 
     let connection_pool = PgPool::connect(
-        &configuration.database.connection_string()
+        &configuration.database.connection_string().expose_secret()
     )
         .await
         .expect("Failed to connect to Postgres.");
